@@ -10,10 +10,6 @@ void idleCanBusWorker::onEntry(QEvent *)
 {
     anIf(CanBusWorkerBasisDbgEn, anTrk("idleCanBusWorker Entered"));
     qApp->processEvents();
-    if (basisptr->previousStateName.isEmpty() && !(basisptr->currentDev))
-    {
-        basisptr->initialize();
-    }
 }
 
 void idleCanBusWorker::onExit(QEvent *)

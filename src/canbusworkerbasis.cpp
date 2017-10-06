@@ -130,7 +130,6 @@ void CanBusWorkerBasis::executePrioritizedBuffer()
                     pendingReplyFrameWithTimeStamp.Data = QVariant::fromValue(currentDev->readFrame());
                     pendingReplyFrameWithTimeStamp.TimeStamp = NOW2String;
                     addAGlobalSignal(pendingReplyFrameWithTimeStamp);
-                    qApp->processEvents();
                 }
                 break;
             }
@@ -141,7 +140,7 @@ void CanBusWorkerBasis::executePrioritizedBuffer()
             }
             case requestFrameTransmission:
             {
-                lastFrameTransmitted = currentGlobalSignal
+                lastFrameTransmitted = currentGlobalSignal;
                 break;
             }
             default:
