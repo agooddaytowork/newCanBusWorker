@@ -74,7 +74,7 @@ public:
 signals:
     void FramesReceived();
     void FramesWritten();
-    void writingFrame;
+    void writingFrame();
 public slots:
     void In(const GlobalSignal &aGlobalSignal);
 };

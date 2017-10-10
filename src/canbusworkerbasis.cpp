@@ -32,7 +32,7 @@ void CanBusWorkerBasis::initialize()
         anIf(CanBusWorkerBasisDbgEn,
             anTrk("Device Created !");
             QObject::connect(currentDev, &QCanBusDevice::stateChanged, this, [&](QCanBusDevice::CanBusDeviceState devState){
-                anAck("Device State Changed To " + QCanBusDeviceStateMetaEnum.valueToKey(static_cast<int>(devState)));
+                anAck("Device State Changed To " << QCanBusDeviceStateMetaEnum.valueToKey(static_cast<int>(devState)));
             });)
         QObject::connect(currentDev, &QCanBusDevice::errorOccurred, this, [&](QCanBusDevice::CanBusError devError){
             setError(DeviceError,QCanBusErrorMetaEnum.valueToKey(static_cast<int>(devError)));
@@ -114,10 +114,10 @@ void CanBusWorkerBasis::executePrioritizedBuffer()
     if (prioritizedBuffer.size())
     {
         currentGlobalSignal = takeOutFirstOfMostPrioritizedGlobalSignals();
-        QString currentGlobalSignalTypeTypeName = currentGlobalSignal->Type.typeName();
+        QString currentGlobalSignalTypeTypeName = currentGlobalSignal.Type.typeName();
         if (currentGlobalSignalTypeTypeName == QStringLiteral("CanBusWorkerBasis::Data"))
         {
-            switch (currentGlobalSignal->Type.toInt()) {
+            switch (currentGlobalSignal.Type.toInt()) {
             case replyFrameWithTimeStamp:
             {
                 emit Out(currentGlobalSignal);
@@ -141,7 +141,7 @@ void CanBusWorkerBasis::executePrioritizedBuffer()
         }
         else if (currentGlobalSignalTypeTypeName == QStringLiteral("CanBusWorkerBasis::Notification"))
         {
-            switch (currentGlobalSignal->Type.toInt()) {
+            switch (currentGlobalSignal.Type.toInt()) {
             case DeviceReady:
             {
                 emit Out(currentGlobalSignal);

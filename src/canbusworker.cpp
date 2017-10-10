@@ -2,7 +2,7 @@
 
 CanBusWorker::CanBusWorker(QObject *parent) : QStateMachine(parent)
 {    
-    currentBasis = new CanBusWorkerDB(this);
+    currentBasis = new CanBusWorkerBasis(this);
     QObject::connect(currentBasis, &CanBusWorkerBasis::Out, this, &CanBusWorker::Out);
 
     QState *main = new QState();
@@ -19,8 +19,8 @@ CanBusWorker::CanBusWorker(QObject *parent) : QStateMachine(parent)
     state0->addTransition(currentBasis, &CanBusWorkerBasis::isInitialized, state1);
     state0->addTransition(currentBasis, &CanBusWorkerBasis::aGlobalSignalAdded, state2);
     state1->addTransition(currentBasis, &CanBusWorkerBasis::aGlobalSignalAdded, state2);
-    state2->addTransition(new directTransition(currentBasis,SIGNAL(requestDirectTransition(QString)),state1);
-    state2->addTransition(new directTransition(currentBasis,SIGNAL(requestDirectTransition(QString)),state2);
+    state2->addTransition(new directTransition(currentBasis,SIGNAL(requestDirectTransition(QString)),state1));
+    state2->addTransition(new directTransition(currentBasis,SIGNAL(requestDirectTransition(QString)),state2));
     state2->addTransition(currentBasis, &CanBusWorkerBasis::writingFrame, state3);
     state3->addTransition(new FrameIsWritten(currentBasis,state2));
 

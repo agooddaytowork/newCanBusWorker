@@ -92,12 +92,6 @@ void MainWindow::In(const GlobalSignal &aGlobalSignal)
             ui->textEdit_Read->append("=> Device Is Ready !");
             break;
         }
-        case CanBusWorkerBasis::DeviceCreationFailed:
-        {
-            anInfo("DeviceCreationFailed");
-            ui->textEdit_Read->append("=> Failed To Create Device !");
-            break;
-        }
         default:
             break;
         }
