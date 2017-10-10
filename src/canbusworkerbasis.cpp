@@ -37,8 +37,11 @@ void CanBusWorkerBasis::initialize()
         QObject::connect(currentDev, &QCanBusDevice::errorOccurred, this, [&](QCanBusDevice::CanBusError devError){
             setError(DeviceError,QCanBusErrorMetaEnum.valueToKey(static_cast<int>(devError)));
         });
-        QObject::connect(currentDev, &QCanBusDevice::framesReceived, this, &CanBusWorkerBasis::FramesReceived,
-                         uniqueQtConnectionType);
+        QObject::connect(currentDev, &QCanBusDevice::framesReceived, this, [&](){
+            GlobalSignal queueFramesRead;
+            queueFramesRead.Type = QVariant::fromValue(FrameReceived);
+            addAGlobalSignal(queueFramesRead);
+        });
         QObject::connect(currentDev, &QCanBusDevice::framesWritten, this, &CanBusWorkerBasis::FramesWritten,
                          uniqueQtConnectionType);
         if (currentDev->connectDevice())
@@ -48,8 +51,8 @@ void CanBusWorkerBasis::initialize()
             notifyDeviceCreated.Type = QVariant::fromValue(DeviceReady);
             notifyDeviceCreated.TimeStamp = NOW2String;
             notifyDeviceCreated.DstStrs.append(SmallCoordinatorObjName);
+            addAGlobalSignal(notifyDeviceCreated);
             emit isInitialized();
-            emit Out(notifyDeviceCreated);
         }
         else
         {
@@ -82,15 +85,9 @@ void CanBusWorkerBasis::dispose()
 void CanBusWorkerBasis::clearCache()
 {
     anIf(CanBusWorkerBasisDbgEn, anTrk("Clear Cache !"));
-    currentGlobalSignal.Data.clear();
-    currentGlobalSignal.Type.clear();
-    currentGlobalSignal.TimeStamp.clear();
-    currentGlobalSignal.DstStrs.clear();
-    currentGlobalSignal.Key.clear();
-    currentGlobalSignal.Priority = 0;
-    currentGlobalSignal.SignalPriority = 0;
-    lastFrameTransmitted.setFrameId(0);
-    lastFrameTransmitted.setPayload(0);
+    currentGlobalSignal = GlobalSignal();
+    lastFrameWritten.setFrameId(0);
+    lastFrameWritten.setPayload("");
 }
 
 void CanBusWorkerBasis::setError(const CanBusWorkerBasis::Error &anErrorType, const QString &anErrorInfo)
@@ -117,22 +114,10 @@ void CanBusWorkerBasis::executePrioritizedBuffer()
     if (prioritizedBuffer.size())
     {
         currentGlobalSignal = takeOutFirstOfMostPrioritizedGlobalSignals();
-        if (currentGlobalSignal->Type.typeName() == QStringLiteral("CanBusWorkerBasis::Data"))
+        QString currentGlobalSignalTypeTypeName = currentGlobalSignal->Type.typeName();
+        if (currentGlobalSignalTypeTypeName == QStringLiteral("CanBusWorkerBasis::Data"))
         {
             switch (currentGlobalSignal->Type.toInt()) {
-            case FrameReceived:
-            {
-                GlobalSignal pendingReplyFrameWithTimeStamp;
-                pendingReplyFrameWithTimeStamp.Type = QVariant::fromValue(replyFrameWithTimeStamp);
-                pendingReplyFrameWithTimeStamp.DstStrs.append(SmallCoordinatorObjName);
-                while (currentDev->framesAvailable())
-                {
-                    pendingReplyFrameWithTimeStamp.Data = QVariant::fromValue(currentDev->readFrame());
-                    pendingReplyFrameWithTimeStamp.TimeStamp = NOW2String;
-                    addAGlobalSignal(pendingReplyFrameWithTimeStamp);
-                }
-                break;
-            }
             case replyFrameWithTimeStamp:
             {
                 emit Out(currentGlobalSignal);
@@ -140,7 +125,36 @@ void CanBusWorkerBasis::executePrioritizedBuffer()
             }
             case requestFrameTransmission:
             {
-                lastFrameTransmitted = currentGlobalSignal;
+                lastFrameWritten = currentGlobalSignal.Data.value<QCanBusFrame>();
+                currentDev->writeFrame(lastFrameWritten);
+                emit writingFrame();
+                break;
+            }
+            case clearBuffer:
+            {
+                clearPrioritizedBuffer();
+                break;
+            }
+            default:
+                break;
+            }
+        }
+        else if (currentGlobalSignalTypeTypeName == QStringLiteral("CanBusWorkerBasis::Notification"))
+        {
+            switch (currentGlobalSignal->Type.toInt()) {
+            case DeviceReady:
+            {
+                emit Out(currentGlobalSignal);
+                break;
+            }
+            case FrameReceived:
+            {
+                collectFramesReceived();
+                break;
+            }
+            case FrameWritten:
+            {
+                emit Out(currentGlobalSignal);
                 break;
             }
             default:
@@ -148,6 +162,43 @@ void CanBusWorkerBasis::executePrioritizedBuffer()
             }
         }
     }
+}
+
+void CanBusWorkerBasis::collectFramesReceived()
+{
+    if (currentDev->framesAvailable())
+    {
+        GlobalSignal pendingReplyFrameWithTimeStamp;
+        pendingReplyFrameWithTimeStamp.Type = QVariant::fromValue(replyFrameWithTimeStamp);
+        pendingReplyFrameWithTimeStamp.DstStrs.append(SmallCoordinatorObjName);
+        while (currentDev->framesAvailable())
+        {
+            pendingReplyFrameWithTimeStamp.Data = QVariant::fromValue(currentDev->readFrame());
+            pendingReplyFrameWithTimeStamp.TimeStamp = NOW2String;
+            addAGlobalSignal(pendingReplyFrameWithTimeStamp);
+        }
+    }
+}
+
+void CanBusWorkerBasis::emitErrorGlobalSignal()
+{
+    anIf(CanBusWorkerBasisDbgEn,
+         anError("Emit CanBusWorkerBasis::Error");
+         anInfo("ErrorType: " + QString(CanBusWorkerBasis::ErrorMetaEnum.valueToKey(static_cast<int>(ErrorType))));
+         anInfo("ErrorInfo: " + ErrorInfo);
+    );
+    GlobalSignal errorGlobalSignal;
+    errorGlobalSignal.Type = QVariant::fromValue(ErrorType);
+    errorGlobalSignal.Data = QVariant::fromValue(ErrorInfo);
+    errorGlobalSignal.Priority = 200;
+    errorGlobalSignal.SignalPriority = 200;
+    errorGlobalSignal.DstStrs.append(SmallCoordinatorObjName);
+    emit Out(errorGlobalSignal);
+}
+
+void CanBusWorkerBasis::In(const GlobalSignal &aGlobalSignal)
+{
+    addAGlobalSignal(aGlobalSignal);
 }
 
 const QMetaEnum CanBusWorkerBasis::DataMetaEnum = QMetaEnum::fromType<CanBusWorkerBasis::Data>();

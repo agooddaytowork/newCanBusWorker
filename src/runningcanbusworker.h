@@ -6,7 +6,7 @@
 class runningCanBusWorker : public QState
 {
 public:
-    runningCanBusWorker(CanBusWorkerBasis *parentBasis);
+    runningCanBusWorker(CanBusWorkerBasis *parentBasis, QState *parent = nullptr);
 protected:
     void onEntry(QEvent *) override;
     void onExit(QEvent *) override;

@@ -61,7 +61,7 @@ public:
     QString ErrorInfo;
 
     GlobalSignal currentGlobalSignal;
-    QCanBusFrame lastFrameTransmitted;
+    QCanBusFrame lastFrameWritten;
 
     void initialize();
     void dispose();
@@ -70,9 +70,14 @@ public:
     void clearError();
 
     void executePrioritizedBuffer();
+    void collectFramesReceived();
+    void emitErrorGlobalSignal();
 signals:
     void FramesReceived();
     void FramesWritten();
+    void writingFrame;
+public slots:
+    void In(const GlobalSignal &aGlobalSignal);
 };
 
 Q_DECLARE_METATYPE(QCanBusFrame)

@@ -5,19 +5,25 @@
 
 #include <QStateMachine>
 #include "canbusworkerbasis.h"
+#include "errorcanbusworker.h"
+#include "frameiswritten.h"
+#include "idlecanbusworker.h"
+#include "runningcanbusworker.h"
+#include "timingframetransmission.h"
+#include "uninitiatedcanbusworker.h"
+#include "shared/directtransition.h"
 
 class CanBusWorker : public QStateMachine
 {
     Q_OBJECT
 public:
     explicit CanBusWorker(QObject *parent = 0);
-    ~CanBusWorker();
 signals:
     void Out(const GlobalSignal &);
 public slots:
     void In(const GlobalSignal &aGlobalSignal);
 private:
-    CanBusWorkerBasis * currentBasis = Q_NULLPTR;
+    CanBusWorkerBasis * currentBasis = nullptr;
 };
 
 #endif // CANBUSWORKER_H

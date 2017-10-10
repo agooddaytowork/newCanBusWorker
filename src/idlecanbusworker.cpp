@@ -1,6 +1,7 @@
 #include "idlecanbusworker.h"
 
-idleCanBusWorker::idleCanBusWorker(CanBusWorkerBasis *parentBasis) :
+idleCanBusWorker::idleCanBusWorker(CanBusWorkerBasis *parentBasis, QState *parent) :
+    QState(parent),
     basisptr(parentBasis)
 {
     anIf(CanBusWorkerBasisDbgEn, anTrk("idleCanBusWorker Constructed"));
@@ -15,4 +16,5 @@ void idleCanBusWorker::onEntry(QEvent *)
 void idleCanBusWorker::onExit(QEvent *)
 {
     anIf(CanBusWorkerBasisDbgEn, anTrk("Leave idleCanBusWorker"));
+    basisptr->previousStateName = objectName();
 }

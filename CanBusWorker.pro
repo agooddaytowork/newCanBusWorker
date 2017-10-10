@@ -35,7 +35,10 @@ SOURCES += \
     shared/abstractstatemachinebasis.cpp \
     src/idlecanbusworker.cpp \
     src/runningcanbusworker.cpp \
-    src/uninitiatedcanbusworker.cpp
+    src/uninitiatedcanbusworker.cpp \
+    src/timingframetransmission.cpp \
+    src/frameiswritten.cpp \
+    src/errorcanbusworker.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -48,7 +51,10 @@ HEADERS += \
     shared/abstractstatemachinebasis.h \
     src/idlecanbusworker.h \
     src/runningcanbusworker.h \
-    src/uninitiatedcanbusworker.h
+    src/uninitiatedcanbusworker.h \
+    src/timingframetransmission.h \
+    src/frameiswritten.h \
+    src/errorcanbusworker.h
 
 FORMS += \
         mainwindow.ui
