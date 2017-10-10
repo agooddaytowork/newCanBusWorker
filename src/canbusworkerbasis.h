@@ -20,7 +20,6 @@ public:
         NoData = 0,
         requestFrameTransmission,
         replyFrameWithTimeStamp,
-        replyPluginAndInterface,
         clearBuffer
     };
     Q_ENUM(Data)
